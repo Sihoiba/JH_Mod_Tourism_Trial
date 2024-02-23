@@ -38,7 +38,20 @@ register_blueprint "runtime_tourism"
                     for c in level:coords( { "elevator", "portal", "floor_exit", "elevator_branch", "elevator_special" } ) do
                         level:set_explored( c, true )
                     end
-                    -- unlock gatekeeper elevators
+                    for c in level:coords( { "elevator", "elevator_branch", "elevator_mini", "elevator_special", } ) do
+                        local flames = level:get_entity( c, "ghostflames" )
+                        if flames then
+                            nova.log("destroying gatekeeper lock")
+                            world:mark_destroy( flames )
+                        end
+                        for e in level:entities() do
+                            local mod_gatekeeper_lock = e:child("mod_exalted_gatekeeper_elevator_inactive")
+                            if mod_gatekeeper_lock then
+                                world:mark_destroy( mod_gatekeeper_lock )
+                            end
+                        end
+                    end
+                    world:flush_destroy()
                 end
             end
         ]],
