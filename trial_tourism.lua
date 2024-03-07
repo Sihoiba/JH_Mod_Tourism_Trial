@@ -1,7 +1,8 @@
 function neuterAny(being)
-    if being.data and being.data.ai.group ~= "player" then
+    if being.data and being.data.ai and being.data.ai.group ~= "player" then
         being.data.ai.state = "idle"
         being.data.ai.smell = nil
+        being.data.ai.alert = 1
         being.minimap.color = 0
         being.target.entity = nil
         being.data.ai.group = "demon_n"
@@ -30,6 +31,7 @@ register_blueprint "runtime_tourism"
         ]],
         on_enter_level = [[
             function ( self, entity, reenter )
+                nova.log("on enter level runtime tourism")
                 if not reenter then
                     local level = world:get_level()
                     for e in level:enemies() do
@@ -41,7 +43,7 @@ register_blueprint "runtime_tourism"
                     for c in level:coords( { "elevator", "elevator_branch", "elevator_mini", "elevator_special", } ) do
                         local flames = level:get_entity( c, "ghostflames" )
                         if flames then
-                            nova.log("destroying gatekeeper lock")
+                            nova.log("destroying ghostflames")
                             world:mark_destroy( flames )
                         end
                         for e in level:entities() do
@@ -57,6 +59,7 @@ register_blueprint "runtime_tourism"
         ]],
         on_timer = [[
             function ( self, first )
+                nova.log("on timer runtime tourism")
                 if first then return 49 end
                 local level = world:get_level()
                 for t in level:targets( world:get_player(), 8 ) do
@@ -64,6 +67,16 @@ register_blueprint "runtime_tourism"
                         ui:spawn_fx( t, "fx_convert", t )
                     end
                     neuterAny(t)
+                end
+                if level.text and level.text.name == "Abattoir" then
+                    nova.log("Checking for bloodflames")
+                    for e in level:entities() do
+                        if e.text and e.text.name == "bloodflames" then
+                            nova.log("destroying bloodflames")
+                            world:mark_destroy( e )
+                            level:set_cell_flag( world:get_position(e), EF_NOPATH, false )
+                        end
+                    end
                 end
                 return 50
             end
@@ -87,6 +100,7 @@ register_blueprint "trial_tourism"
     callbacks = {
         on_create_player = [[
             function( self, player )
+                nova.log("on create player")
                 local weapon  = player:child("pistol") or player:child("rpistol") or player:child("pipe_wrench")
                 if weapon then world:destroy( weapon ) end
                 local eammo = player:child("ammo_9mm") or player:child("ammo_44")
@@ -253,10 +267,12 @@ register_world "trial_tourism"
             event      = { DIFFICULTY*25, math.random(2) + 1, },
             blueprint = "level_dante",
             rewards       = {
-                "lootbox_medical",
-                "lootbox_ammo",
+                "dante_lootbox_medical",
+                "dante_lootbox_ammo",
+                { math.random_pick{  "dante_medical_station", "dante_technical_station", "dante_lootbox_special_2", "dante_lootbox_armor" }, level = 3, }
             },
             lootbox_count = 4,
+            lootbox_table = "dante_lootbox",
             intermission = {
                 scene     = "intermission_dante",
                 music     = "music_main_01",
@@ -266,14 +282,11 @@ register_world "trial_tourism"
         data.level[22].blueprint = "level_dante_intro"
         data.level[22].force_terminal = true
         data.level[22].lootbox_count  = 3
+        data.level[22].lootbox_table = nil
         data.level[23].blueprint = "level_dante_halls"
         data.level[24].blueprint = "level_dante_colosseum"
         data.level[25].blueprint = "level_dante_rafters"
         data.level[26].blueprint = "level_dante_altar"
-        data.level[23].lootbox_table = "dante_lootbox"
-        data.level[24].lootbox_table = "dante_lootbox"
-        data.level[25].lootbox_table = "dante_lootbox"
-        data.level[26].lootbox_table = "dante_lootbox"
         data.cot.boss_index = 26
         local mines_data = {
             name           = "Callisto Mines",
@@ -769,6 +782,41 @@ register_world "trial_tourism"
         data.level[16].branch = world.add_branch( early_branch )
         data.level[17].branch = world.add_branch( mid_branch )
         data.level[18].branch = world.add_branch( late_branch )
+
+        local ossuary_data = {
+            name           = "Ossuary",
+            episode        = 4,
+            depth          = 23,
+            size           = 2,
+            enemy_list     = "dante",
+            enemy_mod      = { demon = 2.0 },
+
+            blueprint      = "level_dante_ossuary",
+            dlevel_mod     = 1,
+            lootbox_count  = 4,
+            quest = {
+                no_info = true,
+                list = "dante",
+            },
+            rewards       = {
+                "dante_lootbox_medical",
+                "dante_lootbox_ammo",
+            },
+            events     = {
+                { "event_exalted_summons", 3.0, },
+                { "event_hunt", 2.0, },
+            },
+            lootbox_table = "dante_lootbox",
+            event      = { DIFFICULTY*25, math.random(2), },
+            special = {
+                blueprint      = "level_ossuary_abattoir",
+                ilevel_mod     = 3,
+                dlevel_mod     = 1,
+                returnable     = true,
+            },
+        }
+
+        data.level[22].branch = world.add_branch( ossuary_data )
 
         local level_5 = "level_callisto_docks"
         if math.random(2) == 1 then
