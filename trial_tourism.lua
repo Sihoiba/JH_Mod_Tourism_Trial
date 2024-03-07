@@ -15,6 +15,9 @@ register_blueprint "runtime_tourism"
     text = {
         denied = "Not a suitable souvenir!",
     },
+    data = {
+        swordmaster_open = false
+    },
     attributes = {
         cannot_pick_up = true
     },
@@ -68,6 +71,18 @@ register_blueprint "runtime_tourism"
                     end
                     neuterAny(t)
                 end
+
+                if world.data.current == 22 then
+                    nova.log("Adding swordmaster portal")
+                    local wd = world.data.level[ world.data.current ]
+                    if wd.special and not self.data.swordmaster_open then
+                        local e = level:place_entity( "portal_01", level:find_coord( "portal_off" ) )
+                        world:play_sound( "summon", e )
+                        ui:spawn_fx( nil, "fx_summon", nil, world:get_position( e ) )
+                        self.data.swordmaster_open = true
+                    end
+                end
+
                 -- level 59-61 is the Abbatoir
                 nova.log("world data current"..tostring(world.data.current))
                 if world.data.current > 50 then
