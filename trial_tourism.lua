@@ -68,13 +68,16 @@ register_blueprint "runtime_tourism"
                     end
                     neuterAny(t)
                 end
-                if level.text and level.text.name == "Abattoir" then
+                -- level 59-61 is the Abbatoir
+                nova.log("world data current"..tostring(world.data.current))
+                if world.data.current > 50 then
                     nova.log("Checking for bloodflames")
-                    for e in level:entities() do
-                        if e.text and e.text.name == "bloodflames" then
+                    for c in level:coords( {"door_frame"} ) do
+                        local b = level:get_entity(c, "bloodflames")
+                        if b then
                             nova.log("destroying bloodflames")
-                            world:mark_destroy( e )
-                            level:set_cell_flag( world:get_position(e), EF_NOPATH, false )
+                            world:mark_destroy( b )
+                            level:set_cell_flag( c, EF_NOPATH, false )
                         end
                     end
                 end
