@@ -965,7 +965,6 @@ register_world "trial_tourism"
     end,
     on_init = function( player )
         local klass_id = gtk.get_klass_id( player )
-        ui:inc_stat( "klass_"..klass_id )
         world.set_klass( klass_id )
 
         player.statistics.data.special_levels.generated  = world.data.special_levels
@@ -1058,7 +1057,6 @@ register_world "trial_tourism"
     end,
     on_end   = function( player, result )
         if result > 0 then
-            local klass_id = gtk.get_klass_id( player )
             ui:alert{
                 delay = 3000,
                 position = ivec2( -1, 18 ),
@@ -1067,7 +1065,6 @@ register_world "trial_tourism"
                 footer = " ",
                 win = true,
             }
-            ui:inc_stat( "win_klass_"..klass_id )
             world:lua_callback( player, "on_win_game" )
             world:play_voice( "vo_beyond_ending" )
         elseif result == 0 then
